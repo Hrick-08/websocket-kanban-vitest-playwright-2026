@@ -1,0 +1,7 @@
+{
+  "name": "websocket-powered-kanban-board",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "start": "cd backend && npm install && node server.js"
+  }
+}
