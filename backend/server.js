@@ -1,10 +1,15 @@
 const express = require("express");
 const http = require("http");
+const path = require("path");          // ❗ MISSING BEFORE
 const { Server } = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+
+// Socket.IO
+const io = new Server(server, {
+  cors: { origin: "*" }
+});
 
 // In-memory task storage
 let tasks = [
@@ -33,12 +38,9 @@ let tasks = [
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
-  // Send all tasks to newly connected client
   socket.emit("sync:tasks", tasks);
 
-  // Create a new task
   socket.on("task:create", (task) => {
-    console.log("Creating task:", task);
     const newTask = {
       ...task,
       id: task.id || Date.now().toString(),
@@ -48,9 +50,7 @@ io.on("connection", (socket) => {
     io.emit("task:created", newTask);
   });
 
-  // Update an existing task
   socket.on("task:update", (updatedTask) => {
-    console.log("Updating task:", updatedTask);
     const index = tasks.findIndex((t) => t.id === updatedTask.id);
     if (index !== -1) {
       tasks[index] = { ...tasks[index], ...updatedTask };
@@ -58,9 +58,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Move task between columns
   socket.on("task:move", ({ taskId, newStatus }) => {
-    console.log("Moving task:", taskId, "to", newStatus);
     const task = tasks.find((t) => t.id === taskId);
     if (task) {
       task.status = newStatus;
@@ -68,9 +66,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Delete a task
   socket.on("task:delete", (taskId) => {
-    console.log("Deleting task:", taskId);
     tasks = tasks.filter((t) => t.id !== taskId);
     io.emit("task:deleted", taskId);
   });
@@ -85,12 +81,17 @@ app.get("/api/health", (req, res) => {
   res.json({ ok: true });
 });
 
-// Serve Vite build
-const __dirname = path.resolve();
-app.use(express.static(path.join(__dirname, "frontend/dist")));
+// === SERVE FRONTEND ===
+const ROOT_DIR = path.resolve(__dirname, "..");
+
+app.use(express.static(path.join(ROOT_DIR, "frontend/dist")));
 
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "frontend/dist/index.html"));
+  res.sendFile(path.join(ROOT_DIR, "frontend/dist/index.html"));
 });
 
-server.listen(5000, () => console.log("Server running on port 5000"));
+const PORT = process.env.PORT || 5000;
+
+server.listen(PORT, "0.0.0.0", () => {
+  console.log("Server running on port", PORT);
+});
