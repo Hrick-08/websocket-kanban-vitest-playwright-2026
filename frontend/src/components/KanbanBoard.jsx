@@ -327,7 +327,7 @@ function KanbanBoard() {
 
   useEffect(() => {
     // Initialize WebSocket connection
-    socketRef.current = io(import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000');
+    socketRef.current = io();
 
     // Listen for initial task sync
     socketRef.current.on('sync:tasks', (initialTasks) => {
