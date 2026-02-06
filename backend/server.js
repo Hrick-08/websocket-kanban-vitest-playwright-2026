@@ -80,4 +80,17 @@ io.on("connection", (socket) => {
   });
 });
 
+// API
+app.get("/api/health", (req, res) => {
+  res.json({ ok: true });
+});
+
+// Serve Vite build
+const __dirname = path.resolve();
+app.use(express.static(path.join(__dirname, "frontend/dist")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "frontend/dist/index.html"));
+});
+
 server.listen(5000, () => console.log("Server running on port 5000"));
